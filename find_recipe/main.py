@@ -1,6 +1,7 @@
 import functions_framework, json, os, time
 from openai import OpenAI
 from dotenv import load_dotenv
+from firestore import db
 
 load_dotenv()
 
@@ -27,6 +28,7 @@ def find_recipe(request):
 
     body_data = request.get_data()
     request_json = json.loads(body_data)
+    request_json["timestamp"] = int(time.time())
 
     cuisine = request_json["cuisine"]
     # ingrs = request_json["ingrs"]
@@ -97,5 +99,21 @@ def find_recipe(request):
         print("Image generated!")
         generated_image = image_response.data[0].url
         json_recipe["imageUrl"] = generated_image
+
+    print("Adding result to database")
+    # add to recipes database
+    recipe_ref = db.collection("recipes").document()
+    recipe_id = recipe_ref.id
+    recipe_ref.set(json_recipe)
+    # set id of returning recipe
+    json_recipe["id"] = recipe_id
+
+    # add to recipe requests database
+    request_ref = db.collection("recipe_requests").document()
+    # link recipe to recipe request
+    request_json["recipeId"] = recipe_id
+    request_ref.set(request_json)
+
+    print("Result added to database")
 
     return ({"response": json_recipe}, 200, headers)
