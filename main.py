@@ -110,9 +110,10 @@ def find_recipe(request):
 
     generated_image = image_response.data[0].url
 
-    print(generated_image)
+    json_recipe = json.loads(generated_recipe)
+    json_recipe["imageUrl"] = generated_image
 
-    return ({"response": ""}, 200, headers)
+    return ({"response": json_recipe}, 200, headers)
 
 
 find_recipe({})
