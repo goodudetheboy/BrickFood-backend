@@ -1,5 +1,4 @@
-import time
-import functions_framework, json, os
+import functions_framework, json, os, time
 from openai import OpenAI
 from dotenv import load_dotenv
 
