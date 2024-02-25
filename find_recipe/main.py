@@ -1,7 +1,7 @@
-import functions_framework, json, os, time
+import functions_framework, json, os, time, requests
 from openai import OpenAI
 from dotenv import load_dotenv
-from firestore import db
+from firestore import db, bucket
 
 load_dotenv()
 
@@ -84,7 +84,8 @@ def find_recipe(request):
         # prepare image prompt
         print("Valid recipe generated, generating image")
         image_prompt = f"""
-            Generate a presentable and realistic image of a dish to be put on a menu based on the following recipe: {generated_recipe}
+            Generate a presentable photo of a dish to be put on a menu based on the following recipe: {generated_recipe}
+            Make sure to show only and only the dish without any texts or flairs
         """
         image_response = client.images.generate(
             model="dall-e-3",
@@ -97,8 +98,11 @@ def find_recipe(request):
         # successfully generated
         print("Image generated!")
         generated_image = image_response.data[0].url
+
         json_recipe["imageUrl"] = generated_image
         json_recipe["voteCount"] = 0
+    else:
+        return ({"error": "Unable to generate recipe from given input"}, 400, headers)
 
     print("Adding result to database")
     # add to recipes database
@@ -107,6 +111,11 @@ def find_recipe(request):
     recipe_ref.set(json_recipe)
     # set id of returning recipe
     json_recipe["id"] = recipe_id
+
+    # upload image to firebase storage
+    firebase_image = upload_image_from_url(generated_image, f"images/{recipe_id}")
+    if firebase_image is not None:
+        json_recipe["imageUrl"] = firebase_image
 
     # add to recipe requests database
     request_ref = db.collection("recipe_requests").document()
@@ -117,3 +126,28 @@ def find_recipe(request):
     print("Result added to database")
 
     return ({"response": json_recipe}, 200, headers)
+
+
+def upload_image_from_url(image_url, destination_path):
+    # Download the image from the URL
+    response = requests.get(image_url)
+
+    if response.status_code == 200:
+        # Upload the image to Firebase Storage
+        blob = bucket.blob(destination_path)
+        blob.upload_from_string(
+            response.content, content_type="image/jpeg"
+        )  # Adjust content type as needed
+
+        # Set the access control to public-read
+        blob.acl.all().grant_read()
+        blob.acl.save()
+
+        # Get the public URL for the uploaded image
+        public_url = f"https://storage.googleapis.com/{bucket.name}/{destination_path}"
+        print(f"Image uploaded to {destination_path}")
+        print(f"Public URL: {public_url}")
+        return public_url
+    else:
+        print(f"Failed to download image from {image_url}")
+        return None
