@@ -96,7 +96,11 @@ def compose_recipes_ranking(timestamp):
     recipes_ranking = []
 
     for recipe_doc in recipes_ranking_docs:
-        recipes_ranking.append(recipe_doc.to_dict())
+        recipe_json = recipe_doc.to_dict()
+        recipe_json["id"] = recipe_doc.id
+        if "voteCount" not in recipe_json:
+            recipe_json["voteCount"] = 0
+        recipes_ranking.append(recipe_json)
 
     recipes_ranking = sorted(recipes_ranking, key=lambda d: -d["voteCount"])
 
