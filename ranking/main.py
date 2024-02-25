@@ -49,7 +49,7 @@ def ranking(request):
         # compose and sort today's ranking
         print("Composing ranking in the day of the given timestamp")
         rankings = compose_recipes_ranking(int(request_json["timestamp"]))
-        print("Ranking succesfully composed!")
+        print(f"{len(rankings)} recipes succesfully composed!")
         return ({"response": rankings}, 200, headers)
     else:
         return ({"error": "Invalid action provided."}, 400, headers)
