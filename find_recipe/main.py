@@ -53,7 +53,7 @@ def find_recipe(request):
     system_prompt = f"""
         Given below is a list of food and ingredients at a dining hall, where each station's name is listed in capital, followed by the ingredients available in each station. Given a type of cuisine from a country from the user, your task is to generate a way to use the ingredients currently at the dining hall to make a new dish inspired the given cuisine. Note that the user does not have ANY COOKING UTENSILS, and so they cannot cook their food. The user will also have a list of preferred ingredients. To the best of your abilities, taking account of the preferred lists, generate and reply with only and only the recipe in the following JSON format:
         {recipe_json_format}
-        DO NOT INCLUDE THE STATION'S NAME IN THE INSTRUCTION. If you cannot make a reasonable recipe, please respond with "foodName": "none"
+        DO NOT INCLUDE THE STATION'S NAME IN THE INSTRUCTION.
         The user would like to eat {cuisine}-inspired food today. Here are the type of ingredients they want to be included in the recipe {ingrs}. What can they use from the dining hall?
         Here are the ingredients at the dining hall: {menu}
     """
@@ -98,6 +98,7 @@ def find_recipe(request):
         print("Image generated!")
         generated_image = image_response.data[0].url
         json_recipe["imageUrl"] = generated_image
+        json_recipe["voteCount"] = 0
 
     print("Adding result to database")
     # add to recipes database
