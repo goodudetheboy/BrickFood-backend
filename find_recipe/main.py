@@ -25,13 +25,12 @@ def find_recipe(request):
     #"""
     # start request
     print("Initializing connection to server")
-
     body_data = request.get_data()
     request_json = json.loads(body_data)
     request_json["timestamp"] = int(time.time())
 
     cuisine = request_json["cuisine"]
-    # ingrs = request_json["ingrs"]
+    ingrs = request_json["ingrs"]
 
     # load menu
     print("Loading menu info from dining hall")
@@ -52,10 +51,10 @@ def find_recipe(request):
         }
     """
     system_prompt = f"""
-        Given below is a list of food and ingredients at a dining hall, where each station's name is listed in capital, followed by the ingredients available in each station. Given a type of cuisine from a country from the user, your task is to generate a way to use the ingredients currently at the dining hall to make a new dish inspired the given cuisine. Note that the user does not have ANY COOKING UTENSILS, and so they cannot cook their food. Generate and reply with only and only the recipe in the following JSON format:
+        Given below is a list of food and ingredients at a dining hall, where each station's name is listed in capital, followed by the ingredients available in each station. Given a type of cuisine from a country from the user, your task is to generate a way to use the ingredients currently at the dining hall to make a new dish inspired the given cuisine. Note that the user does not have ANY COOKING UTENSILS, and so they cannot cook their food. The user will also have a list of preferred ingredients. To the best of your abilities, taking account of the preferred lists, generate and reply with only and only the recipe in the following JSON format:
         {recipe_json_format}
         DO NOT INCLUDE THE STATION'S NAME IN THE INSTRUCTION. If you cannot make a reasonable recipe, please respond with "foodName": "none"
-        The user would like to eat {cuisine}-inspired food with meat today. What can they use from the dining hall?
+        The user would like to eat {cuisine}-inspired food today. Here are the type of ingredients they want to be included in the recipe {ingrs}. What can they use from the dining hall?
         Here are the ingredients at the dining hall: {menu}
     """
     # send request to gpt-4
