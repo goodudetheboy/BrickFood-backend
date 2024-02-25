@@ -108,14 +108,16 @@ def find_recipe(request):
     # add to recipes database
     recipe_ref = db.collection("recipes").document()
     recipe_id = recipe_ref.id
-    recipe_ref.set(json_recipe)
-    # set id of returning recipe
-    json_recipe["id"] = recipe_id
 
     # upload image to firebase storage
     firebase_image = upload_image_from_url(generated_image, f"images/{recipe_id}")
     if firebase_image is not None:
         json_recipe["imageUrl"] = firebase_image
+
+    # set data on firebase
+    recipe_ref.set(json_recipe)
+    # set id of returning recipe
+    json_recipe["id"] = recipe_id
 
     # add to recipe requests database
     request_ref = db.collection("recipe_requests").document()
